@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sveltekit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: sveltekit/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run check
+      - run: npm run build
+      - name: Integration test (test.js — самонаполнение через API)
+        run: |
+          PORT=3000 HOST=127.0.0.1 node build/index.js &
+          SERVER_PID=$!
+          sleep 5
+          TEST_PORT=3000 TEST_HOST=127.0.0.1 node ../test.js
+          kill $SERVER_PID

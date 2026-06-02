@@ -1,0 +1,32 @@
+services:
+  exam:
+    build: ./sveltekit
+    ports:
+      - "3001:3000"
+    # Рекомендуется env_file для секретов:  env_file: .env
+    # SESSION_SECRET обязателен (>=32 символов) — без него прод-сервер не стартует.
+    # Сгенерировать: openssl rand -base64 32
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - SESSION_SECRET=${SESSION_SECRET:?задайте SESSION_SECRET (>=32 символов)}
+      # named volume ниже — на нём WAL безопасен и быстрее. Для bind-mount на
+      # Windows/WSL2 выставьте SQLITE_JOURNAL=DELETE.
+      - SQLITE_JOURNAL=${SQLITE_JOURNAL:-WAL}
+      - COOKIE_SECURE=${COOKIE_SECURE:-false}
+      # За HTTPS-прокси укажите публичный адрес:
+      # - ORIGIN=${ORIGIN:-}
+    volumes:
+      - exam-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O-", "http://127.0.0.1:3000/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  exam-data:
