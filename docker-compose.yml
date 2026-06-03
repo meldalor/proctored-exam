@@ -2,7 +2,7 @@ services:
   exam:
     build: ./sveltekit
     ports:
-      - "3001:3000"
+      - "3000:3000"
     # Рекомендуется env_file для секретов:  env_file: .env
     # SESSION_SECRET обязателен (>=32 символов) — без него прод-сервер не стартует.
     # Сгенерировать: openssl rand -base64 32
