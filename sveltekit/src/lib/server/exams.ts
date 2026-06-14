@@ -1,4 +1,14 @@
 import db from './db';
+import path from 'node:path';
+import fs from 'node:fs';
+
+const screenshotsRoot = path.join(process.cwd(), 'data', 'screenshots');
+
+// Удаляет строки и файлы скриншотов экзамена. Вызывать до удаления самого экзамена (FK).
+export function deleteExamScreenshots(examId: number): void {
+	db.prepare('DELETE FROM screenshots WHERE exam_id = ?').run(examId);
+	fs.rmSync(path.join(screenshotsRoot, String(examId)), { recursive: true, force: true });
+}
 
 export interface ExamRow {
 	id: number;
@@ -48,6 +58,7 @@ export function resetStudentExams(studentId: number): void {
 		for (const id of examIds) {
 			delEvents.run(id);
 			delEQ.run(id);
+			deleteExamScreenshots(id);
 			delExam.run(id);
 		}
 		db.prepare('UPDATE students SET retake_allowed=0 WHERE id=?').run(studentId);

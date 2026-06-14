@@ -32,6 +32,7 @@
 	let settingsOpen = $state(false);
 	let theoryCount = $state('2');
 	let practicalCount = $state('1');
+	let captureEnabled = $state(false);
 	let activeTheory = $state(0);
 	let activePractical = $state(0);
 	let es: EventSource | null = null;
@@ -119,6 +120,7 @@
 			examOpen = s.exam_open === '1';
 			theoryCount = s.questions_per_exam_theory ?? '2';
 			practicalCount = s.questions_per_exam_practical ?? '1';
+			captureEnabled = s.screen_capture_enabled === '1';
 			activeTheory = s.active_theory ?? 0;
 			activePractical = s.active_practical ?? 0;
 		}
@@ -141,7 +143,8 @@
 			body: JSON.stringify({
 				exam_duration_minutes: limitEnabled ? +durationInput || 0 : 0,
 				questions_per_exam_theory: +theoryCount,
-				questions_per_exam_practical: +practicalCount
+				questions_per_exam_practical: +practicalCount,
+				screen_capture_enabled: captureEnabled
 			})
 		});
 		settingsOpen = false;
@@ -346,6 +349,19 @@
 						onchange={() => (practicalCount = clampCount(practicalCount, activePractical))}
 					/>
 					<div class="text-xs text-muted mt-1">Доступно активных: {activePractical}</div>
+				</div>
+			</div>
+
+			<div class="form-group">
+				<label class="flex items-center gap-2" style="cursor:pointer">
+					<span class="switch">
+						<input type="checkbox" bind:checked={captureEnabled} />
+						<span class="switch-slider"></span>
+					</span>
+					<span>Запись экрана (скриншоты)</span>
+				</label>
+				<div class="text-xs text-muted mt-1">
+					Требует от студента шаринга всего экрана. Работает только по HTTPS.
 				</div>
 			</div>
 

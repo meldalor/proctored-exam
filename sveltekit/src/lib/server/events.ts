@@ -12,7 +12,10 @@ export const EVENT_TYPES = Object.freeze({
 	FULLSCREEN_EXIT: 'fullscreen_exit',
 	FULLSCREEN_ENTER: 'fullscreen_enter',
 	POINTER_LEAVE: 'pointer_leave',
-	POINTER_RETURN: 'pointer_return'
+	POINTER_RETURN: 'pointer_return',
+	SCREEN_SHARE_STARTED: 'screen_share_started',
+	SCREEN_SHARE_STOPPED: 'screen_share_stopped',
+	SCREEN_SHARE_DENIED: 'screen_share_denied'
 });
 
 export const ALERT_TYPES = new Set<string>([
@@ -27,5 +30,8 @@ export const ALERT_TYPES = new Set<string>([
 	EVENT_TYPES.FULLSCREEN_EXIT,
 	EVENT_TYPES.FULLSCREEN_ENTER,
 	EVENT_TYPES.POINTER_LEAVE,
-	EVENT_TYPES.POINTER_RETURN
+	EVENT_TYPES.POINTER_RETURN,
+	EVENT_TYPES.SCREEN_SHARE_STARTED,
+	EVENT_TYPES.SCREEN_SHARE_STOPPED,
+	EVENT_TYPES.SCREEN_SHARE_DENIED
 ]);

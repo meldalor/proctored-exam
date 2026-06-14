@@ -1,10 +1,12 @@
 import db from './db';
+import { deleteExamScreenshots } from './exams';
 
 export const DEFAULTS: Readonly<Record<string, string>> = Object.freeze({
 	exam_duration_minutes: '0',
 	questions_per_exam_theory: '2',
 	questions_per_exam_practical: '1',
-	exam_open: '0'
+	exam_open: '0',
+	screen_capture_enabled: '0'
 });
 
 export function ensureSettings(groupId: number): void {
@@ -36,6 +38,7 @@ export function deleteGroupData(gid: number): void {
 	for (const id of examIds) {
 		delEvents.run(id);
 		delEQ.run(id);
+		deleteExamScreenshots(id);
 		delExam.run(id);
 	}
 	db.prepare('DELETE FROM students       WHERE group_id = ?').run(gid);

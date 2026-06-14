@@ -3,6 +3,7 @@
 	import Markdown from '$lib/components/Markdown.svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import { Tracker, isTouchDevice } from '$lib/tracking';
+	import { ScreenCapture } from '$lib/screenCapture';
 	import { appConfirm } from '$lib/stores/confirm.svelte';
 
 	interface Question {
@@ -16,6 +17,7 @@
 		student_name: string;
 		started_at: number;
 		duration_minutes: number;
+		screen_capture?: boolean;
 		questions: Question[];
 	}
 
@@ -36,10 +38,13 @@
 	let typedBodies = $state<Record<number, string>>({});
 	let needsFullscreen = $state(false);
 	let fullscreenError = $state(false);
+	let needsScreenShare = $state(false);
+	let screenShareError = $state('');
 
 	const seenSteps: Record<number, boolean> = {};
 	const lastSnapshots: Record<number, string> = {};
 	const tracker = new Tracker();
+	const screenCapture = new ScreenCapture();
 	let flushTimer: ReturnType<typeof setInterval> | undefined;
 	let clockTimer: ReturnType<typeof setInterval> | undefined;
 	let pollTimer: ReturnType<typeof setInterval> | undefined;
@@ -174,6 +179,41 @@
 		needsFullscreen = false;
 	}
 
+	async function requestScreenShare() {
+		screenShareError = '';
+		const res = await screenCapture.start();
+		if (res.ok) {
+			tracker.record(tracker.activeField, 'screen_share_started');
+			flush();
+			needsScreenShare = false;
+			return;
+		}
+		if (res.reason === 'not_monitor') {
+			screenShareError = 'Нужно выбрать «Весь экран», а не отдельное окно или вкладку.';
+			return;
+		}
+		if (res.reason === 'insecure') {
+			// По http захват недоступен — не блокируем экзамен, но фиксируем отказ.
+			tracker.record(tracker.activeField, 'screen_share_denied', { reason: 'insecure' });
+			flush();
+			screenShareError = 'Захват экрана недоступен без HTTPS — продолжаем без записи.';
+			needsScreenShare = false;
+			return;
+		}
+		tracker.record(tracker.activeField, 'screen_share_denied', { reason: res.reason });
+		flush();
+		screenShareError = 'Доступ к экрану обязателен — разрешите шаринг всего экрана.';
+	}
+
+	// Один клик = одно разрешение (иначе теряется user-activation для второго запроса).
+	async function startExam() {
+		if (needsScreenShare) {
+			await requestScreenShare();
+			return;
+		}
+		if (needsFullscreen) await enterFullscreen();
+	}
+
 	async function nextStep() {
 		await flush();
 		step++;
@@ -205,6 +245,7 @@
 				if (flushTimer) clearInterval(flushTimer);
 				if (clockTimer) clearInterval(clockTimer);
 				tracker.detach();
+				screenCapture.stop();
 				if (document.fullscreenElement) document.exitFullscreen();
 				reviewMode = true;
 				justSubmitted = true;
@@ -307,6 +348,13 @@
 				if (!reviewMode && !submitting) needsFullscreen = !active;
 			};
 			if (!isTouchDevice()) needsFullscreen = true;
+			if (!isTouchDevice() && exam!.screen_capture) needsScreenShare = true;
+			screenCapture.onStopped = () => {
+				if (reviewMode || submitting) return;
+				tracker.record(tracker.activeField, 'screen_share_stopped');
+				flush();
+				needsScreenShare = true;
+			};
 			tracker.attach(flush);
 			typeStep(step);
 		} catch {
@@ -322,6 +370,7 @@
 		if (gradeTimer) clearInterval(gradeTimer);
 		if (typingTimer) clearTimeout(typingTimer);
 		tracker.detach();
+		screenCapture.stop();
 	});
 </script>
 
@@ -483,27 +532,38 @@
 	</div>
 {/if}
 
-{#if needsFullscreen && !reviewMode && !waiting}
+{#if (needsFullscreen || needsScreenShare) && !reviewMode && !waiting}
 	<div class="confirm-overlay" role="presentation">
-		<div class="confirm-modal text-center" style="min-width:340px">
-			<div style="font-size:2rem;font-family:var(--font-mono);color:var(--primary)">
-				[ fullscreen ]
-			</div>
-			<h2 class="mt-3">Полноэкранный режим</h2>
-			<p class="text-muted mt-2 mb-4">
-				Экзамен проходит в полноэкранном режиме. Выход из него фиксируется преподавателем.
+		<div class="confirm-modal text-center" style="min-width:360px">
+			<div style="font-size:2rem;font-family:var(--font-mono);color:var(--primary)">[ старт ]</div>
+			<h2 class="mt-3">Подготовка к экзамену</h2>
+			<p class="text-muted mt-2 mb-3">
+				{#if needsScreenShare}
+					Сначала разрешите запись экрана: нажмите кнопку и выберите <b>Весь экран</b>. Затем
+					включится полноэкранный режим. Остановка записи и выход из полного экрана фиксируются
+					преподавателем.
+				{:else}
+					Экзамен проходит в полноэкранном режиме. Выход из него фиксируется преподавателем.
+				{/if}
 			</p>
+			{#if screenShareError}
+				<div class="alert alert-error mb-3">{screenShareError}</div>
+			{/if}
 			{#if fullscreenError}
 				<div class="alert alert-error mb-3">
 					Браузер не разрешил полноэкранный режим — можно продолжить без него.
 				</div>
 			{/if}
-			<button class="btn btn-primary" onclick={enterFullscreen}>Войти в полноэкранный режим</button>
-			<div class="mt-3">
-				<button class="btn btn-sm btn-secondary" onclick={skipFullscreen}>
-					продолжить без полноэкранного режима
-				</button>
-			</div>
+			<button class="btn btn-primary" onclick={startExam}>
+				{needsScreenShare ? 'Начать запись экрана' : 'Войти в полноэкранный режим'}
+			</button>
+			{#if needsFullscreen && !needsScreenShare}
+				<div class="mt-3">
+					<button class="btn btn-sm btn-secondary" onclick={skipFullscreen}>
+						продолжить без полноэкранного режима
+					</button>
+				</div>
+			{/if}
 		</div>
 	</div>
 {/if}

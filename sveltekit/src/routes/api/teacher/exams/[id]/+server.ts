@@ -43,5 +43,9 @@ export const GET: RequestHandler = ({ locals, params }) => {
 		}
 	}
 
-	return json({ ...exam, questions, events });
+	const screenshots = db
+		.prepare('SELECT id, ts FROM screenshots WHERE exam_id=? ORDER BY ts ASC')
+		.all(exam.id);
+
+	return json({ ...exam, questions, events, screenshots });
 };

@@ -31,6 +31,7 @@
 		retake_allowed: number;
 		questions: QuestionItem[];
 		events: EventItem[];
+		screenshots: { id: number; ts: number }[];
 	}
 	interface Panel {
 		field: string;
@@ -56,6 +57,7 @@
 	let replaySpeed = $state(2);
 	let panels = $state<Panel[]>([]);
 	let hoverMarker = $state<EventItem | null>(null);
+	let lightbox = $state<string | null>(null);
 
 	const rafs: Record<string, number> = {};
 	const overlayTimers: Record<string, ReturnType<typeof setTimeout>> = {};
@@ -451,6 +453,30 @@
 			</div>
 		</div>
 
+		{#if exam.screenshots?.length}
+			<div class="card mt-4">
+				<div class="flex items-center justify-between mb-3">
+					<h2>Запись экрана</h2>
+					<span class="badge badge-gray">{exam.screenshots.length} кадров</span>
+				</div>
+				<div class="screenshot-grid">
+					{#each exam.screenshots as shot (shot.id)}
+						<button
+							class="screenshot-thumb"
+							onclick={() => (lightbox = '/api/teacher/exams/' + id + '/screenshots/' + shot.id)}
+						>
+							<img
+								loading="lazy"
+								src="/api/teacher/exams/{id}/screenshots/{shot.id}"
+								alt="скриншот {fmtMs(shot.ts - exam.started_at)}"
+							/>
+							<span class="screenshot-ts">{fmtMs(shot.ts - exam.started_at)}</span>
+						</button>
+					{/each}
+				</div>
+			</div>
+		{/if}
+
 		<div class="card mt-4">
 			<h2>Оценка</h2>
 			<div class="flex gap-3 mt-3" style="flex-wrap:wrap">
@@ -476,3 +502,59 @@
 		</div>
 	</div>
 {/if}
+
+{#if lightbox}
+	<div class="lightbox" role="presentation" onclick={() => (lightbox = null)}>
+		<img src={lightbox} alt="скриншот крупно" />
+	</div>
+{/if}
+
+<style>
+	.screenshot-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+		gap: 0.5rem;
+	}
+	.screenshot-thumb {
+		position: relative;
+		padding: 0;
+		border: 1px solid var(--border);
+		border-radius: 0.375rem;
+		overflow: hidden;
+		cursor: zoom-in;
+		background: var(--bg);
+		aspect-ratio: 16 / 10;
+	}
+	.screenshot-thumb img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+	.screenshot-ts {
+		position: absolute;
+		left: 0;
+		bottom: 0;
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		padding: 0.1rem 0.3rem;
+		background: rgba(0, 0, 0, 0.6);
+		color: #fff;
+	}
+	.lightbox {
+		position: fixed;
+		inset: 0;
+		z-index: 1000;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.85);
+		cursor: zoom-out;
+		padding: 1rem;
+	}
+	.lightbox img {
+		max-width: 95vw;
+		max-height: 95vh;
+		object-fit: contain;
+	}
+</style>

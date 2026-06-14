@@ -73,6 +73,14 @@ db.exec(`
     server_ts INTEGER NOT NULL DEFAULT (unixepoch('now') * 1000)
   );
 
+  CREATE TABLE IF NOT EXISTS screenshots (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    exam_id   INTEGER NOT NULL REFERENCES exams(id),
+    ts        INTEGER NOT NULL,
+    path      TEXT    NOT NULL,
+    server_ts INTEGER NOT NULL DEFAULT (unixepoch('now') * 1000)
+  );
+
   CREATE TABLE IF NOT EXISTS teachers (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     username      TEXT    NOT NULL UNIQUE,
@@ -92,6 +100,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS events_exam_ts          ON events(exam_id, ts);
   CREATE INDEX IF NOT EXISTS events_type             ON events(type);
   CREATE INDEX IF NOT EXISTS exams_student_submitted ON exams(student_id, submitted_at);
+  CREATE INDEX IF NOT EXISTS screenshots_exam_ts     ON screenshots(exam_id, ts);
 `);
 
 for (const col of [

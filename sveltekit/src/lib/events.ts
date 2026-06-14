@@ -10,7 +10,10 @@ export const EV_LABELS: Record<string, string> = {
 	fullscreen_exit: '[fullscreen] Вышел из полноэкранного режима',
 	fullscreen_enter: '<- Вернулся в полноэкранный режим',
 	pointer_leave: '[pointer] Курсор ушёл за пределы окна',
-	pointer_return: '<- Курсор вернулся'
+	pointer_return: '<- Курсор вернулся',
+	screen_share_started: '[screen] Начал шаринг экрана',
+	screen_share_stopped: '[screen] Остановил шаринг экрана',
+	screen_share_denied: '[screen] Отказ от шаринга экрана'
 };
 
 export const EV_SHORT: Record<string, string> = {
@@ -26,7 +29,10 @@ export const EV_SHORT: Record<string, string> = {
 	fullscreen_exit: 'Выход ФП',
 	fullscreen_enter: 'Возврат ФП',
 	pointer_leave: 'Курсор вне окна',
-	pointer_return: 'Курсор в окне'
+	pointer_return: 'Курсор в окне',
+	screen_share_started: 'Шаринг старт',
+	screen_share_stopped: 'Шаринг стоп',
+	screen_share_denied: 'Шаринг отказ'
 };
 
 export const EV_CLASS: Record<string, string> = {
@@ -42,7 +48,10 @@ export const EV_CLASS: Record<string, string> = {
 	fullscreen_exit: 'ev-blur',
 	fullscreen_enter: 'ev-focus',
 	pointer_leave: 'ev-tab',
-	pointer_return: 'ev-focus'
+	pointer_return: 'ev-focus',
+	screen_share_started: 'ev-focus',
+	screen_share_stopped: 'ev-blur',
+	screen_share_denied: 'ev-tab'
 };
 
 export const EV_MARKER: Record<string, string> = {
@@ -57,7 +66,10 @@ export const EV_MARKER: Record<string, string> = {
 	fullscreen_exit: 't-marker-blur',
 	fullscreen_enter: 't-marker-focus',
 	pointer_leave: 't-marker-tab',
-	pointer_return: 't-marker-focus'
+	pointer_return: 't-marker-focus',
+	screen_share_started: 't-marker-focus',
+	screen_share_stopped: 't-marker-blur',
+	screen_share_denied: 't-marker-tab'
 };
 
 export const EV_WARNING = new Set([
@@ -66,7 +78,9 @@ export const EV_WARNING = new Set([
 	'tab_hidden',
 	'window_blur',
 	'devtools_open',
-	'fullscreen_exit'
+	'fullscreen_exit',
+	'screen_share_stopped',
+	'screen_share_denied'
 ]);
 
 export const EV_COUNTER: Record<string, string> = {
