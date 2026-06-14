@@ -6,7 +6,11 @@ export const EV_LABELS: Record<string, string> = {
 	window_blur: '[blur] Свернул окно',
 	window_focus: '<- Развернул окно',
 	devtools_open: '[devtools] Открыл DevTools',
-	devtools_close: '<- Закрыл DevTools'
+	devtools_close: '<- Закрыл DevTools',
+	fullscreen_exit: '[fullscreen] Вышел из полноэкранного режима',
+	fullscreen_enter: '<- Вернулся в полноэкранный режим',
+	pointer_leave: '[pointer] Курсор ушёл за пределы окна',
+	pointer_return: '<- Курсор вернулся'
 };
 
 export const EV_SHORT: Record<string, string> = {
@@ -18,7 +22,11 @@ export const EV_SHORT: Record<string, string> = {
 	window_focus: 'Focus окна',
 	keystroke: 'Ввод',
 	devtools_open: 'DevTools',
-	devtools_close: 'DevTools'
+	devtools_close: 'DevTools',
+	fullscreen_exit: 'Выход ФП',
+	fullscreen_enter: 'Возврат ФП',
+	pointer_leave: 'Курсор вне окна',
+	pointer_return: 'Курсор в окне'
 };
 
 export const EV_CLASS: Record<string, string> = {
@@ -30,7 +38,11 @@ export const EV_CLASS: Record<string, string> = {
 	window_focus: 'ev-focus',
 	keystroke: 'ev-keystroke',
 	devtools_open: 'ev-tab',
-	devtools_close: 'ev-focus'
+	devtools_close: 'ev-focus',
+	fullscreen_exit: 'ev-blur',
+	fullscreen_enter: 'ev-focus',
+	pointer_leave: 'ev-tab',
+	pointer_return: 'ev-focus'
 };
 
 export const EV_MARKER: Record<string, string> = {
@@ -41,10 +53,21 @@ export const EV_MARKER: Record<string, string> = {
 	window_blur: 't-marker-blur',
 	window_focus: 't-marker-focus',
 	devtools_open: 't-marker-tab',
-	devtools_close: 't-marker-focus'
+	devtools_close: 't-marker-focus',
+	fullscreen_exit: 't-marker-blur',
+	fullscreen_enter: 't-marker-focus',
+	pointer_leave: 't-marker-tab',
+	pointer_return: 't-marker-focus'
 };
 
-export const EV_WARNING = new Set(['copy', 'paste', 'tab_hidden', 'window_blur', 'devtools_open']);
+export const EV_WARNING = new Set([
+	'copy',
+	'paste',
+	'tab_hidden',
+	'window_blur',
+	'devtools_open',
+	'fullscreen_exit'
+]);
 
 export const EV_COUNTER: Record<string, string> = {
 	copy: 'copy_count',

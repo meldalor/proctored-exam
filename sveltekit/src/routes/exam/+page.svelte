@@ -2,7 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
-	import { Tracker } from '$lib/tracking';
+	import { Tracker, isTouchDevice } from '$lib/tracking';
 	import { appConfirm } from '$lib/stores/confirm.svelte';
 
 	interface Question {
@@ -34,6 +34,8 @@
 	let timerDanger = $state(false);
 	let step = $state(1);
 	let typedBodies = $state<Record<number, string>>({});
+	let needsFullscreen = $state(false);
+	let fullscreenError = $state(false);
 
 	const seenSteps: Record<number, boolean> = {};
 	const lastSnapshots: Record<number, string> = {};
@@ -156,6 +158,22 @@
 		tracker.record(String(field), 'paste', { text });
 	}
 
+	async function enterFullscreen() {
+		fullscreenError = false;
+		try {
+			await document.documentElement.requestFullscreen();
+			needsFullscreen = false;
+		} catch {
+			fullscreenError = true;
+		}
+	}
+	function skipFullscreen() {
+		// Браузер не дал полный экран — пропускаем, но фиксируем для преподавателя.
+		tracker.record(tracker.activeField, 'fullscreen_exit');
+		flush();
+		needsFullscreen = false;
+	}
+
 	async function nextStep() {
 		await flush();
 		step++;
@@ -187,6 +205,7 @@
 				if (flushTimer) clearInterval(flushTimer);
 				if (clockTimer) clearInterval(clockTimer);
 				tracker.detach();
+				if (document.fullscreenElement) document.exitFullscreen();
 				reviewMode = true;
 				justSubmitted = true;
 				startGradePolling();
@@ -284,6 +303,10 @@
 			tracker.activeField = String(exam!.questions[0]?.position ?? 1);
 			startClock();
 			flushTimer = setInterval(flush, 2000);
+			tracker.onFullscreenChange = (active) => {
+				if (!reviewMode && !submitting) needsFullscreen = !active;
+			};
+			if (!isTouchDevice()) needsFullscreen = true;
 			tracker.attach(flush);
 			typeStep(step);
 		} catch {
@@ -455,6 +478,31 @@
 						{submitting ? 'Отправка…' : 'Сдать работу'}
 					</button>
 				{/if}
+			</div>
+		</div>
+	</div>
+{/if}
+
+{#if needsFullscreen && !reviewMode && !waiting}
+	<div class="confirm-overlay" role="presentation">
+		<div class="confirm-modal text-center" style="min-width:340px">
+			<div style="font-size:2rem;font-family:var(--font-mono);color:var(--primary)">
+				[ fullscreen ]
+			</div>
+			<h2 class="mt-3">Полноэкранный режим</h2>
+			<p class="text-muted mt-2 mb-4">
+				Экзамен проходит в полноэкранном режиме. Выход из него фиксируется преподавателем.
+			</p>
+			{#if fullscreenError}
+				<div class="alert alert-error mb-3">
+					Браузер не разрешил полноэкранный режим — можно продолжить без него.
+				</div>
+			{/if}
+			<button class="btn btn-primary" onclick={enterFullscreen}>Войти в полноэкранный режим</button>
+			<div class="mt-3">
+				<button class="btn btn-sm btn-secondary" onclick={skipFullscreen}>
+					продолжить без полноэкранного режима
+				</button>
 			</div>
 		</div>
 	</div>

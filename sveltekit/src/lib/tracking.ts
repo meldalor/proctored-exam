@@ -5,11 +5,22 @@ export interface TrackEvent {
 	ts: number;
 }
 
+export function isTouchDevice(): boolean {
+	// На тач-устройствах size/pointer-детект даёт false-positive: клавиатура и адресная строка меняют innerHeight.
+	return Boolean(
+		window.matchMedia?.('(pointer: coarse)').matches ||
+			navigator.maxTouchPoints > 0 ||
+			'ontouchstart' in window
+	);
+}
+
 export class Tracker {
 	buf: TrackEvent[] = [];
 	activeField = '1';
+	onFullscreenChange?: (active: boolean) => void;
 
 	private devtoolsOpen = false;
+	private pointerOutside = false;
 	private lastHidden = false;
 	private blurRecorded = false;
 	private lastDevtoolsChange = 0;
@@ -34,11 +45,7 @@ export class Tracker {
 		this.lastHidden = document.hidden;
 		this.lastCheckTs = Date.now();
 
-		// На тач-устройствах size-детект DevTools даёт false-positive: клавиатура и адресная строка меняют innerHeight.
-		const isTouch =
-			window.matchMedia?.('(pointer: coarse)').matches ||
-			navigator.maxTouchPoints > 0 ||
-			'ontouchstart' in window;
+		const isTouch = isTouchDevice();
 
 		this.on(document, 'visibilitychange', () => {
 			if (document.hidden === this.lastHidden) return;
@@ -72,6 +79,33 @@ export class Tracker {
 				flush();
 			}, 100);
 		});
+
+		if (!isTouch) {
+			this.on(document, 'mouseleave', () => {
+				if (this.pointerOutside) return;
+				this.pointerOutside = true;
+				this.record(this.activeField, 'pointer_leave');
+				flush();
+			});
+			this.on(document, 'mouseenter', () => {
+				if (!this.pointerOutside) return;
+				this.pointerOutside = false;
+				this.record(this.activeField, 'pointer_return');
+				flush();
+			});
+
+			const onFsChange = () => {
+				const active = !!(
+					document.fullscreenElement ??
+					(document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement
+				);
+				this.record(this.activeField, active ? 'fullscreen_enter' : 'fullscreen_exit');
+				this.onFullscreenChange?.(active);
+				flush();
+			};
+			this.on(document, 'fullscreenchange', onFsChange);
+			this.on(document, 'webkitfullscreenchange', onFsChange);
+		}
 
 		const threshold = 160;
 		const check = () => {

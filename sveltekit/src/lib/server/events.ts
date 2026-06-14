@@ -8,7 +8,11 @@ export const EVENT_TYPES = Object.freeze({
 	WINDOW_BLUR: 'window_blur',
 	WINDOW_FOCUS: 'window_focus',
 	DEVTOOLS_OPEN: 'devtools_open',
-	DEVTOOLS_CLOSE: 'devtools_close'
+	DEVTOOLS_CLOSE: 'devtools_close',
+	FULLSCREEN_EXIT: 'fullscreen_exit',
+	FULLSCREEN_ENTER: 'fullscreen_enter',
+	POINTER_LEAVE: 'pointer_leave',
+	POINTER_RETURN: 'pointer_return'
 });
 
 export const ALERT_TYPES = new Set<string>([
@@ -19,5 +23,9 @@ export const ALERT_TYPES = new Set<string>([
 	EVENT_TYPES.WINDOW_BLUR,
 	EVENT_TYPES.WINDOW_FOCUS,
 	EVENT_TYPES.DEVTOOLS_OPEN,
-	EVENT_TYPES.DEVTOOLS_CLOSE
+	EVENT_TYPES.DEVTOOLS_CLOSE,
+	EVENT_TYPES.FULLSCREEN_EXIT,
+	EVENT_TYPES.FULLSCREEN_ENTER,
+	EVENT_TYPES.POINTER_LEAVE,
+	EVENT_TYPES.POINTER_RETURN
 ]);
