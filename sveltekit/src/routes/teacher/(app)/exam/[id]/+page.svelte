@@ -57,7 +57,11 @@
 	let replaySpeed = $state(2);
 	let panels = $state<Panel[]>([]);
 	let hoverMarker = $state<EventItem | null>(null);
-	let lightbox = $state<string | null>(null);
+	let lightboxIndex = $state<number | null>(null);
+	const shotCount = $derived(exam?.screenshots.length ?? 0);
+	const currentShot = $derived(
+		lightboxIndex !== null && exam ? exam.screenshots[lightboxIndex] : null
+	);
 
 	const rafs: Record<string, number> = {};
 	const overlayTimers: Record<string, ReturnType<typeof setTimeout>> = {};
@@ -212,6 +216,28 @@
 		if (ev.type === 'copy' || ev.type === 'paste')
 			return '"' + ((ev.payload?.text as string) || '').slice(0, 60) + '"';
 		return '';
+	}
+
+	function shotUrl(shotId: number) {
+		return '/api/teacher/exams/' + id + '/screenshots/' + shotId;
+	}
+	function openLightbox(i: number) {
+		lightboxIndex = i;
+	}
+	function closeLightbox() {
+		lightboxIndex = null;
+	}
+	function prevShot() {
+		if (lightboxIndex !== null && lightboxIndex > 0) lightboxIndex--;
+	}
+	function nextShot() {
+		if (lightboxIndex !== null && lightboxIndex < shotCount - 1) lightboxIndex++;
+	}
+	function onLightboxKey(e: KeyboardEvent) {
+		if (lightboxIndex === null) return;
+		if (e.key === 'Escape') closeLightbox();
+		else if (e.key === 'ArrowLeft') prevShot();
+		else if (e.key === 'ArrowRight') nextShot();
 	}
 
 	async function saveGrade() {
@@ -460,14 +486,11 @@
 					<span class="badge badge-gray">{exam.screenshots.length} кадров</span>
 				</div>
 				<div class="screenshot-grid">
-					{#each exam.screenshots as shot (shot.id)}
-						<button
-							class="screenshot-thumb"
-							onclick={() => (lightbox = '/api/teacher/exams/' + id + '/screenshots/' + shot.id)}
-						>
+					{#each exam.screenshots as shot, i (shot.id)}
+						<button class="screenshot-thumb" onclick={() => openLightbox(i)}>
 							<img
 								loading="lazy"
-								src="/api/teacher/exams/{id}/screenshots/{shot.id}"
+								src={shotUrl(shot.id)}
 								alt="скриншот {fmtMs(shot.ts - exam.started_at)}"
 							/>
 							<span class="screenshot-ts">{fmtMs(shot.ts - exam.started_at)}</span>
@@ -503,9 +526,29 @@
 	</div>
 {/if}
 
-{#if lightbox}
-	<div class="lightbox" role="presentation" onclick={() => (lightbox = null)}>
-		<img src={lightbox} alt="скриншот крупно" />
+<svelte:window onkeydown={onLightboxKey} />
+
+{#if currentShot}
+	<div class="lightbox" role="presentation" onclick={closeLightbox}>
+		<button class="lightbox-close" onclick={closeLightbox} aria-label="Закрыть">×</button>
+		<div class="lightbox-stage" role="presentation" onclick={(e) => e.stopPropagation()}>
+			<img src={shotUrl(currentShot.id)} alt="скриншот крупно" />
+			<button
+				class="lightbox-half lightbox-prev"
+				onclick={prevShot}
+				aria-label="Предыдущий"
+				disabled={lightboxIndex === 0}
+			></button>
+			<button
+				class="lightbox-half lightbox-next"
+				onclick={nextShot}
+				aria-label="Следующий"
+				disabled={lightboxIndex === shotCount - 1}
+			></button>
+		</div>
+		<div class="lightbox-meta">
+			{(lightboxIndex ?? 0) + 1} / {shotCount} · {fmtMs(currentShot.ts - (exam?.started_at ?? 0))}
+		</div>
 	</div>
 {/if}
 
@@ -552,9 +595,60 @@
 		cursor: zoom-out;
 		padding: 1rem;
 	}
-	.lightbox img {
-		max-width: 95vw;
-		max-height: 95vh;
+	.lightbox-stage {
+		position: relative;
+		display: inline-flex;
+		max-width: 90vw;
+		max-height: 90vh;
+	}
+	.lightbox-stage img {
+		display: block;
+		max-width: 90vw;
+		max-height: 90vh;
 		object-fit: contain;
+	}
+	.lightbox-half {
+		position: absolute;
+		top: 0;
+		height: 100%;
+		width: 50%;
+		border: none;
+		background: transparent;
+		padding: 0;
+	}
+	.lightbox-prev {
+		left: 0;
+		cursor: w-resize;
+	}
+	.lightbox-next {
+		right: 0;
+		cursor: e-resize;
+	}
+	.lightbox-half:disabled {
+		cursor: default;
+	}
+	.lightbox-close {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.75rem;
+		z-index: 2;
+		border: none;
+		background: transparent;
+		color: #fff;
+		font-size: 2rem;
+		line-height: 1;
+		cursor: pointer;
+	}
+	.lightbox-meta {
+		position: absolute;
+		bottom: 0.75rem;
+		left: 50%;
+		transform: translateX(-50%);
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: #fff;
+		background: rgba(0, 0, 0, 0.5);
+		padding: 0.15rem 0.5rem;
+		border-radius: 0.25rem;
 	}
 </style>
