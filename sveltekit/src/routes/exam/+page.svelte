@@ -173,13 +173,6 @@
 			fullscreenError = true;
 		}
 	}
-	function skipFullscreen() {
-		// Браузер не дал полный экран — пропускаем, но фиксируем для преподавателя.
-		tracker.record(tracker.activeField, 'fullscreen_exit');
-		flush();
-		needsFullscreen = false;
-	}
-
 	async function requestScreenShare() {
 		screenShareError = '';
 		const res = await screenCapture.start();
@@ -233,6 +226,11 @@
 
 	async function doSubmit(auto = false) {
 		if (submitting) return;
+		// Полноэкранный режим обязателен для ручной сдачи (авто-сдача по таймауту проходит всегда).
+		if (!auto && exam?.fullscreen_lock && !document.fullscreenElement) {
+			needsFullscreen = true;
+			return;
+		}
 		if (!auto && !(await appConfirm('Сдать работу? Это действие нельзя отменить.'))) return;
 		await flush();
 		submitting = true;
@@ -552,19 +550,12 @@
 			{/if}
 			{#if fullscreenError}
 				<div class="alert alert-error mb-3">
-					Браузер не разрешил полноэкранный режим — можно продолжить без него.
+					Разрешите полноэкранный режим в браузере — без него сдать работу нельзя.
 				</div>
 			{/if}
 			<button class="btn btn-primary" onclick={startExam}>
 				{needsScreenShare ? 'Начать запись экрана' : 'Войти в полноэкранный режим'}
 			</button>
-			{#if needsFullscreen && !needsScreenShare}
-				<div class="mt-3">
-					<button class="btn btn-sm btn-secondary" onclick={skipFullscreen}>
-						продолжить без полноэкранного режима
-					</button>
-				</div>
-			{/if}
 		</div>
 	</div>
 {/if}
