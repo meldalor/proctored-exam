@@ -9,8 +9,8 @@ export function isTouchDevice(): boolean {
 	// На тач-устройствах size/pointer-детект даёт false-positive: клавиатура и адресная строка меняют innerHeight.
 	return Boolean(
 		window.matchMedia?.('(pointer: coarse)').matches ||
-			navigator.maxTouchPoints > 0 ||
-			'ontouchstart' in window
+		navigator.maxTouchPoints > 0 ||
+		'ontouchstart' in window
 	);
 }
 
