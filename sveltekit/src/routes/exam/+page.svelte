@@ -17,6 +17,7 @@
 		student_name: string;
 		started_at: number;
 		duration_minutes: number;
+		fullscreen_lock?: boolean;
 		screen_capture?: boolean;
 		questions: Question[];
 	}
@@ -345,9 +346,9 @@
 			startClock();
 			flushTimer = setInterval(flush, 2000);
 			tracker.onFullscreenChange = (active) => {
-				if (!reviewMode && !submitting) needsFullscreen = !active;
+				if (exam?.fullscreen_lock && !reviewMode && !submitting) needsFullscreen = !active;
 			};
-			if (!isTouchDevice()) needsFullscreen = true;
+			if (!isTouchDevice() && exam!.fullscreen_lock) needsFullscreen = true;
 			if (!isTouchDevice() && exam!.screen_capture) needsScreenShare = true;
 			screenCapture.onStopped = () => {
 				if (reviewMode || submitting) return;

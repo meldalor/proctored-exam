@@ -33,6 +33,7 @@
 	let theoryCount = $state('2');
 	let practicalCount = $state('1');
 	let captureEnabled = $state(false);
+	let fullscreenLock = $state(true);
 	let activeTheory = $state(0);
 	let activePractical = $state(0);
 	let es: EventSource | null = null;
@@ -120,6 +121,7 @@
 			examOpen = s.exam_open === '1';
 			theoryCount = s.questions_per_exam_theory ?? '2';
 			practicalCount = s.questions_per_exam_practical ?? '1';
+			fullscreenLock = s.fullscreen_lock_enabled === '1';
 			captureEnabled = s.screen_capture_enabled === '1';
 			activeTheory = s.active_theory ?? 0;
 			activePractical = s.active_practical ?? 0;
@@ -144,6 +146,7 @@
 				exam_duration_minutes: limitEnabled ? +durationInput || 0 : 0,
 				questions_per_exam_theory: +theoryCount,
 				questions_per_exam_practical: +practicalCount,
+				fullscreen_lock_enabled: fullscreenLock,
 				screen_capture_enabled: captureEnabled
 			})
 		});
@@ -349,6 +352,19 @@
 						onchange={() => (practicalCount = clampCount(practicalCount, activePractical))}
 					/>
 					<div class="text-xs text-muted mt-1">Доступно активных: {activePractical}</div>
+				</div>
+			</div>
+
+			<div class="form-group">
+				<label class="flex items-center gap-2" style="cursor:pointer">
+					<span class="switch">
+						<input type="checkbox" bind:checked={fullscreenLock} />
+						<span class="switch-slider"></span>
+					</span>
+					<span>Полноэкранный режим</span>
+				</label>
+				<div class="text-xs text-muted mt-1">
+					Экзамен в полном экране; выход из него фиксируется.
 				</div>
 			</div>
 

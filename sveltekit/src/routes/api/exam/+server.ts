@@ -28,6 +28,7 @@ export const GET: RequestHandler = ({ cookies }) => {
 		student_name: student.name,
 		started_at: exam.started_at,
 		duration_minutes: +mins,
+		fullscreen_lock: getSetting(student.group_id, 'fullscreen_lock_enabled') === '1',
 		screen_capture: getSetting(student.group_id, 'screen_capture_enabled') === '1',
 		questions
 	});

@@ -18,6 +18,7 @@ export const GET: RequestHandler = ({ locals }) => {
 		active_theory: activeTheory,
 		active_practical: activePractical,
 		exam_open: getSetting(groupId, 'exam_open'),
+		fullscreen_lock_enabled: getSetting(groupId, 'fullscreen_lock_enabled'),
 		screen_capture_enabled: getSetting(groupId, 'screen_capture_enabled')
 	});
 };
@@ -65,6 +66,9 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 			'questions_per_exam_practical',
 			String(Math.max(0, Math.trunc(+(body.questions_per_exam_practical as number)) || 0))
 		);
+	}
+	if (body.fullscreen_lock_enabled !== undefined) {
+		set.run(groupId, 'fullscreen_lock_enabled', body.fullscreen_lock_enabled ? '1' : '0');
 	}
 	if (body.screen_capture_enabled !== undefined) {
 		set.run(groupId, 'screen_capture_enabled', body.screen_capture_enabled ? '1' : '0');
