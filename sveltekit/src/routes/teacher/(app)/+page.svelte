@@ -34,6 +34,7 @@
 	let practicalCount = $state('1');
 	let captureEnabled = $state(false);
 	let fullscreenLock = $state(true);
+	let screenshotInterval = $state('10');
 	let activeTheory = $state(0);
 	let activePractical = $state(0);
 	let es: EventSource | null = null;
@@ -123,6 +124,7 @@
 			practicalCount = s.questions_per_exam_practical ?? '1';
 			fullscreenLock = s.fullscreen_lock_enabled === '1';
 			captureEnabled = s.screen_capture_enabled === '1';
+			screenshotInterval = s.screenshot_interval_seconds ?? '10';
 			activeTheory = s.active_theory ?? 0;
 			activePractical = s.active_practical ?? 0;
 		}
@@ -147,7 +149,8 @@
 				questions_per_exam_theory: +theoryCount,
 				questions_per_exam_practical: +practicalCount,
 				fullscreen_lock_enabled: fullscreenLock,
-				screen_capture_enabled: captureEnabled
+				screen_capture_enabled: captureEnabled,
+				screenshot_interval_seconds: +screenshotInterval
 			})
 		});
 		settingsOpen = false;
@@ -379,6 +382,18 @@
 				<div class="text-xs text-muted mt-1">
 					Требует от студента шаринга всего экрана. Работает только по HTTPS.
 				</div>
+				{#if captureEnabled}
+					<div class="flex items-center gap-2 mt-2">
+						<input
+							type="number"
+							min="2"
+							class="no-spin"
+							bind:value={screenshotInterval}
+							style="width:5rem;text-align:center"
+						/>
+						<span class="text-xs text-muted">секунд между скриншотами</span>
+					</div>
+				{/if}
 			</div>
 
 			<div class="flex gap-2 justify-end">

@@ -19,6 +19,7 @@
 		duration_minutes: number;
 		fullscreen_lock?: boolean;
 		screen_capture?: boolean;
+		screenshot_interval?: number;
 		questions: Question[];
 	}
 
@@ -175,7 +176,7 @@
 	}
 	async function requestScreenShare() {
 		screenShareError = '';
-		const res = await screenCapture.start();
+		const res = await screenCapture.start((exam?.screenshot_interval ?? 10) * 1000);
 		if (res.ok) {
 			tracker.record(tracker.activeField, 'screen_share_started');
 			flush();

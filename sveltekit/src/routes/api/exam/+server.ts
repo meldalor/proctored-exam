@@ -30,6 +30,7 @@ export const GET: RequestHandler = ({ cookies }) => {
 		duration_minutes: +mins,
 		fullscreen_lock: getSetting(student.group_id, 'fullscreen_lock_enabled') === '1',
 		screen_capture: getSetting(student.group_id, 'screen_capture_enabled') === '1',
+		screenshot_interval: +getSetting(student.group_id, 'screenshot_interval_seconds') || 10,
 		questions
 	});
 };

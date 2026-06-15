@@ -22,7 +22,7 @@ export class ScreenCapture {
 	private timer?: ReturnType<typeof setInterval>;
 	private active = false;
 
-	async start(): Promise<StartResult> {
+	async start(intervalMs: number = INTERVAL_MS): Promise<StartResult> {
 		const md = navigator.mediaDevices;
 		// По http navigator.mediaDevices отсутствует — захват экрана недоступен.
 		if (!md?.getDisplayMedia) return { ok: false, reason: 'insecure' };
@@ -66,7 +66,7 @@ export class ScreenCapture {
 		if (track) track.onended = () => this.handleEnded();
 
 		void this.shoot();
-		this.timer = setInterval(() => void this.shoot(), INTERVAL_MS);
+		this.timer = setInterval(() => void this.shoot(), Math.max(1000, intervalMs));
 		return { ok: true };
 	}
 

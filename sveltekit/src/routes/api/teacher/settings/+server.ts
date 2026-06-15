@@ -19,7 +19,8 @@ export const GET: RequestHandler = ({ locals }) => {
 		active_practical: activePractical,
 		exam_open: getSetting(groupId, 'exam_open'),
 		fullscreen_lock_enabled: getSetting(groupId, 'fullscreen_lock_enabled'),
-		screen_capture_enabled: getSetting(groupId, 'screen_capture_enabled')
+		screen_capture_enabled: getSetting(groupId, 'screen_capture_enabled'),
+		screenshot_interval_seconds: getSetting(groupId, 'screenshot_interval_seconds')
 	});
 };
 
@@ -72,6 +73,15 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	}
 	if (body.screen_capture_enabled !== undefined) {
 		set.run(groupId, 'screen_capture_enabled', body.screen_capture_enabled ? '1' : '0');
+	}
+	if (body.screenshot_interval_seconds !== undefined) {
+		set.run(
+			groupId,
+			'screenshot_interval_seconds',
+			String(
+				Math.max(2, Math.min(600, Math.trunc(+(body.screenshot_interval_seconds as number)) || 10))
+			)
+		);
 	}
 	return json({ ok: true });
 };

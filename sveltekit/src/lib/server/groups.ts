@@ -7,7 +7,8 @@ export const DEFAULTS: Readonly<Record<string, string>> = Object.freeze({
 	questions_per_exam_practical: '1',
 	exam_open: '0',
 	fullscreen_lock_enabled: '1',
-	screen_capture_enabled: '0'
+	screen_capture_enabled: '0',
+	screenshot_interval_seconds: '10'
 });
 
 export function ensureSettings(groupId: number): void {
